@@ -1,0 +1,268 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// Enums are not supported in SQLite, using String with constraints instead
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  householdId String?
+  household   Household? @relation(fields: [householdId], references: [id])
+  requests    Request[]
+  bookings    CulturalCenterBooking[]
+  activities  ActivityCalendar[]
+  assetBorrows AssetBorrowLog[]
+
+  @@map("users")
+}
+
+model District {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  households Household[]
+
+  @@map("districts")
+}
+
+model Household {
+  id          String   @id @default(cuid())
+  householdId String   @unique // Số hộ khẩu
+  address     String
+  districtId  String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  district District @relation(fields: [districtId], references: [id])
+  persons  Person[]
+  members  User[]
+  requests Request[]
+
+  @@map("households")
+}
+
+model Person {
+  id           String   @id @default(cuid())
+  fullName     String
+  dateOfBirth  DateTime
+  gender       String
+  idNumber     String   @unique
+  relationship String   // Quan hệ với chủ hộ
+  householdId  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  household Household @relation(fields: [householdId], references: [id])
+
+  @@map("persons")
+}
+
+model Request {
+  id          String        @id @default(cuid())
+  type        String
+  status      String        @default("PENDING")
+  description String
+  data        String?       // JSON data for request details
+  userId      String
+  householdId String?
+  approvedBy  String?       // Admin ID who approved/rejected
+  rejectedBy  String?       // Admin ID who rejected
+  rejectionReason String?  // Reason for rejection
+  lastSyncedAt DateTime?    // Last time data was synced
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  user      User       @relation(fields: [userId], references: [id])
+  household Household? @relation(fields: [householdId], references: [id])
+
+  @@map("requests")
+}
+
+model CulturalCenter {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  capacity    Int
+  location    String // Tọa độ hoặc địa chỉ
+  building    String // Tòa nhà A, B, C
+  floor       Int?
+  room        String?
+  amenities   String? // JSON array of amenities
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  bookings CulturalCenterBooking[]
+  activities ActivityCalendar[]
+
+  @@map("cultural_centers")
+}
+
+model CulturalCenterBooking {
+  id              String             @id @default(cuid())
+  title           String
+  description     String?
+  startTime       DateTime
+  endTime         DateTime
+  visibility      String             @default("PUBLIC")
+  status          String             @default("PENDING")
+  culturalCenterId String
+  userId          String
+  approvedBy      String?            // Admin ID who approved/rejected
+  rejectedBy      String?            // Admin ID who rejected
+  rejectionReason String?            // Reason for rejection
+  lastSyncedAt    DateTime?          // Last time data was synced
+  autoCancelled   Boolean            @default(false) // Auto-cancelled due to conflict
+  // Handover fields
+  purpose         String?            // Mục đích sử dụng
+  cleaningCommitment Boolean         @default(false) // Cam kết dọn vệ sinh
+  handoverBeforeChecked Boolean      @default(false) // Đã check bàn giao trước khi dùng
+  handoverBeforeCheckedBy String?    // Người check bàn giao trước
+  handoverBeforeCheckedAt DateTime? // Thời gian check bàn giao trước
+  handoverAfterChecked Boolean       @default(false) // Đã check bàn giao sau khi dùng
+  handoverAfterCheckedBy String?     // Người check bàn giao sau
+  handoverAfterCheckedAt DateTime?  // Thời gian check bàn giao sau
+  handoverNotes   String?            // Ghi chú bàn giao
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  // Relations
+  culturalCenter CulturalCenter @relation(fields: [culturalCenterId], references: [id])
+  user           User           @relation(fields: [userId], references: [id])
+  assetBorrows   AssetBorrowLog[]
+
+  @@map("cultural_center_bookings")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  userId    String
+  type      String   @default("INFO") // INFO, SUCCESS, WARNING, ERROR
+  read      Boolean  @default(false)
+  autoGenerated Boolean @default(false) // Auto-generated by system
+  createdAt DateTime @default(now())
+
+  @@map("notifications")
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  action    String   // CREATE, UPDATE, DELETE, APPROVE, REJECT
+  entity    String   // REQUEST, BOOKING, HOUSEHOLD, PERSON
+  entityId  String
+  userId    String
+  adminId   String?  // Admin who performed action
+  details   String?  // JSON details
+  createdAt DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
+model SystemStats {
+  id              String   @id @default(cuid())
+  date            DateTime @unique @default(now())
+  totalHouseholds Int      @default(0)
+  totalPersons    Int      @default(0)
+  totalBookings   Int      @default(0)
+  activeBookings  Int      @default(0)
+  pendingRequests Int      @default(0)
+  approvedRequests Int     @default(0)
+  rejectedRequests Int     @default(0)
+  lastSyncedAt    DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  @@map("system_stats")
+}
+
+// Lịch hoạt động (họp tổ dân phố, sinh hoạt CLB, cho thuê)
+model ActivityCalendar {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  type        String   // MEETING (họp tổ dân phố/chi bộ), CLUB (sinh hoạt CLB), RENTAL (cho thuê)
+  clubType    String?  // Thơ, dưỡng sinh, bóng bàn (nếu type = CLUB)
+  startTime   DateTime
+  endTime     DateTime
+  location    String?  // Địa điểm (có thể là nhà văn hóa hoặc địa điểm khác)
+  culturalCenterId String? // Nếu sử dụng nhà văn hóa
+  createdBy   String   // User ID tạo lịch
+  status      String   @default("ACTIVE") // ACTIVE, CANCELLED
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  culturalCenter CulturalCenter? @relation(fields: [culturalCenterId], references: [id])
+  creator        User            @relation(fields: [createdBy], references: [id])
+
+  @@map("activity_calendars")
+}
+
+// Tài sản cơ sở vật chất
+model Asset {
+  id          String   @id @default(cuid())
+  name        String   // Tên tài sản: Bàn ghế, loa đài, quạt, phông bạt, dụng cụ thể thao
+  category    String   // FURNITURE, AUDIO, ELECTRIC, TENT, SPORTS
+  description String?
+  quantity    Int      @default(1) // Số lượng
+  available   Int      @default(1) // Số lượng có sẵn
+  status      String   @default("GOOD") // GOOD, BROKEN, MAINTENANCE, LIQUIDATION
+  location    String?  // Vị trí lưu trữ
+  notes       String?  // Ghi chú
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  borrowLogs AssetBorrowLog[]
+
+  @@map("assets")
+}
+
+// Nhật ký mượn/trả tài sản
+model AssetBorrowLog {
+  id              String   @id @default(cuid())
+  assetId         String
+  bookingId       String?  // Liên kết với booking nếu có
+  borrowedBy      String   // User ID mượn
+  borrowedAt      DateTime @default(now())
+  returnedAt      DateTime?
+  quantity        Int      @default(1) // Số lượng mượn
+  status          String   @default("BORROWED") // BORROWED, RETURNED, DAMAGED
+  conditionBefore String?  // Tình trạng trước khi mượn
+  conditionAfter  String?  // Tình trạng sau khi trả
+  notes           String?  // Ghi chú
+  checkedBy       String?  // Admin ID kiểm tra
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  asset   Asset                  @relation(fields: [assetId], references: [id])
+  booking CulturalCenterBooking? @relation(fields: [bookingId], references: [id])
+  borrower User                  @relation(fields: [borrowedBy], references: [id])
+
+  @@map("asset_borrow_logs")
+}
