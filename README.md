@@ -33,8 +33,8 @@ Backend API cho hệ thống quản lý nhân khẩu và nhà văn hóa, đượ
 ### Bước 1: Clone repository
 
 ```bash
-git clone <backend-repo-url>
-cd citizen-management-backend
+git clone https://github.com/hungnah/Citizen-Management-BE
+cd Citizen-Management-BE
 ```
 
 ### Bước 2: Cài đặt dependencies
