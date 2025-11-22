@@ -1,0 +1,38 @@
+{
+  "name": "citizen-management-backend",
+  "version": "1.0.0",
+  "description": "Backend API cho hệ thống quản lý nhân khẩu và nhà văn hóa",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "lint": "next lint",
+    "db:generate": "prisma generate --schema ../database/schema.prisma",
+    "db:push": "prisma db push --schema ../database/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema ../database/schema.prisma",
+    "db:studio": "prisma studio --schema ../database/schema.prisma",
+    "db:seed": "tsx scripts/seed.ts"
+  },
+  "dependencies": {
+    "next": "14.0.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@prisma/client": "5.7.1",
+    "prisma": "5.7.1",
+    "bcryptjs": "2.4.3",
+    "jsonwebtoken": "9.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "20.10.5",
+    "@types/react": "18.2.45",
+    "@types/react-dom": "18.2.18",
+    "@types/bcryptjs": "2.4.6",
+    "@types/jsonwebtoken": "9.0.5",
+    "typescript": "5.3.3",
+    "eslint": "8.56.0",
+    "eslint-config-next": "14.0.4",
+    "tsx": "4.6.2"
+  }
+}
+
