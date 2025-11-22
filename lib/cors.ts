@@ -9,6 +9,7 @@ import type { NextRequest } from 'next/server'
 const allowedOrigins = [
   'http://localhost:3000',           // Development
   'http://localhost:3001',           // Development (same origin)
+  'http://localhost:3002',           // Frontend Development
   'https://staging.project.com',      // Staging
   'https://project.com'              // Production
 ]

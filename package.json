@@ -8,10 +8,10 @@
     "build": "next build",
     "start": "next start -p 3001",
     "lint": "next lint",
-    "db:generate": "prisma generate --schema ../database/schema.prisma",
-    "db:push": "prisma db push --schema ../database/schema.prisma",
-    "db:migrate": "prisma migrate dev --schema ../database/schema.prisma",
-    "db:studio": "prisma studio --schema ../database/schema.prisma",
+    "db:generate": "prisma generate --schema ./database/schema.prisma",
+    "db:push": "prisma db push --schema ./database/schema.prisma",
+    "db:migrate": "prisma migrate dev --schema ./database/schema.prisma",
+    "db:studio": "prisma studio --schema ./database/schema.prisma",
     "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
